@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 	std::cout << "video_in:" << in << "video_out:" << out << std::endl;
 
 	string cascadeName =
-			"/home/ideal/hadoop-1.2.1-cpu-gpu/classifier/haarcascade_frontalface_alt.xml";
+			"/home/ideal/hadoop-1.2.1-cpu-gpu/classifier/cars3.xml";
 
 	CascadeClassifier cascade;
 	VideoCapture capture(in);
@@ -57,22 +57,22 @@ int main(int argc, char** argv) {
 	capture >> frame;
 	while (frame.data) {
 
-		std::vector<Rect> faces;
+		std::vector<Rect> cars;
 		Mat frame_gray;
 		cvtColor(frame, frame_gray, CV_BGR2GRAY);
 		equalizeHist(frame_gray, frame_gray);
 
-		cascade.detectMultiScale(frame_gray, faces, 1.2, 4, 0, Size(20, 20));
+		cascade.detectMultiScale(frame_gray, cars, 1.2, 4, 0, Size(20, 20));
 
-		for (size_t i = 0; i < faces.size(); i++) {
-			Point pt1 = faces[i].tl();
-			Size sz = faces[i].size();
+		for (size_t i = 0; i < cars.size(); i++) {
+			Point pt1 = cars[i].tl();
+			Size sz = cars[i].size();
 			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
 			rectangle(frame, pt1, pt2, Scalar(255));
 
 		}
 		v_o.write(frame);
-		//imshow("faces", frame);
+		//imshow("cars", frame);
 		//if(waitKey(2)==27) break;
 		capture >> frame;
 	}

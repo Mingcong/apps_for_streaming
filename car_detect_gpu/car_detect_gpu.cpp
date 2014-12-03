@@ -1,34 +1,37 @@
-//#include "com_smc_vidproc_call_cpu.h"
+//#include "com_smc_vidproc_call_gpu.h"
 
 #include <iostream>
+#include <opencv2/core/core.hpp>
+#include <opencv2/contrib/contrib.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/gpu/gpu.hpp>
+#include <vector>
 
 using namespace std;
 using namespace cv;
+using namespace cv::gpu;
 
-//JNIEXPORT jint JNICALL Java_com_smc_vidproc_call_1cpu_app(JNIEnv *env, jclass,
-//		jstring video_in, jstring video_out) {
+//JNIEXPORT jint JNICALL Java_com_smc_vidproc_call_1gpu_app
+//  (JNIEnv *env, jclass, jstring video_in, jstring video_out)
 int main(int argc, char** argv) {
 	double t = (double) getTickCount();
-//	const char* in;
-//	const char* out;
-//	in = env->GetStringUTFChars(video_in, 0);
-//	out = env->GetStringUTFChars(video_out, 0);
+//   const char* in;
+//   const char* out;
+//   in = env->GetStringUTFChars(video_in, 0);
+//   out = env->GetStringUTFChars(video_out, 0);
 	const char* in = argv[1];
 	const char* out = argv[2];
 	if (in == NULL || out == NULL) {
 		std::cout << "fail to pass parameters!" << endl;
-		return 0;
+		return 0; /* OutOfMemoryError already thrown */
 	}
 	std::cout << "video_in:" << in << "video_out:" << out << std::endl;
+	string cascadeName = "/home/ideal/hadoop-1.2.1-cpu-gpu/classifier/cars3.xml";
 
-	string cascadeName =
-			"/home/ideal/hadoop-1.2.1-cpu-gpu/classifier/haarcascade_frontalface_alt.xml";
-
-	CascadeClassifier cascade;
 	VideoCapture capture(in);
+
 	if (!capture.isOpened()) {
 		cout << "can not open video" << endl;
 		return 0;
@@ -47,8 +50,13 @@ int main(int argc, char** argv) {
 //	env->ReleaseStringUTFChars(video_in, in);
 //	env->ReleaseStringUTFChars(video_out, out);
 
-	if (!cascade.load(cascadeName)) {
-		cout << "can not find cascadeName" << endl;
+	CascadeClassifier_GPU cascade_gpu;
+	int gpuCnt = getCudaEnabledDeviceCount(); // gpuCnt >0 if CUDA device detected
+	if (gpuCnt == 0) {
+		cout << "can not gpu" << endl;
+		return 0;
+	}
+	if (!cascade_gpu.load(cascadeName)) {
 		return 0;
 	}
 
@@ -57,29 +65,35 @@ int main(int argc, char** argv) {
 	capture >> frame;
 	while (frame.data) {
 
-		std::vector<Rect> faces;
+		GpuMat cars;
 		Mat frame_gray;
 		cvtColor(frame, frame_gray, CV_BGR2GRAY);
+		GpuMat gray_gpu(frame_gray);
 		equalizeHist(frame_gray, frame_gray);
 
-		cascade.detectMultiScale(frame_gray, faces, 1.2, 4, 0, Size(20, 20));
+		int detect_num = cascade_gpu.detectMultiScale(gray_gpu, cars, 1.2, 4,
+				Size(20, 20));
+		Mat obj_host;
+		cars.colRange(0, detect_num).download(obj_host);
 
-		for (size_t i = 0; i < faces.size(); i++) {
-			Point pt1 = faces[i].tl();
-			Size sz = faces[i].size();
+		Rect* ccars = obj_host.ptr<Rect>();
+
+		for (int i = 0; i < detect_num; ++i) {
+			Point pt1 = ccars[i].tl();
+			Size sz = ccars[i].size();
 			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
 			rectangle(frame, pt1, pt2, Scalar(255));
-
 		}
+//      imshow("cars", frame);
+		//    if(waitKey(2)==27) break;
 		v_o.write(frame);
-		//imshow("faces", frame);
-		//if(waitKey(2)==27) break;
 		capture >> frame;
 	}
+
 	capture.release();
-	//v_o.release();
+	// v_o.release();
+	cascade_gpu.release();
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
 	return 1;
-
 }
