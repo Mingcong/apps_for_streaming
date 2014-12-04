@@ -1,0 +1,1 @@
+g++ main.cpp -o main `pkg-config --cflags --libs opencv` -L/home/ideal/tools/cuda-5.5/lib64
