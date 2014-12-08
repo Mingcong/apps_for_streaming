@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "video_in:" << in << "video_out:" << out << std::endl;
 
-	string cascadeName =
-			"/home/ideal/hadoop-1.2.1-cpu-gpu/classifier/cars3.xml";
+//	string cascadeName = "/home/ideal/haarout.xml";
+	string cascadeName = "/home/ideal/cars3.xml";
 
 	CascadeClassifier cascade;
 	VideoCapture capture(in);
@@ -35,16 +35,20 @@ int main(int argc, char** argv) {
 	}
 
 	double fps = capture.get(CV_CAP_PROP_FPS); //get the width of frames of the video
-	double dWidth = capture.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-	double dHeight = capture.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
+	int dWidth = capture.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+	int dHeight = capture.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+	int f_count = capture.get(CV_CAP_PROP_FRAME_COUNT); //get the height of frames of the video
 	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
 	cout << "FPS = " << fps << endl;
+	cout << "Frame count = " << f_count << endl;
+    int count = 0;
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//
+//	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
 
-	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
-//	env->ReleaseStringUTFChars(video_in, in);
+
+	//	env->ReleaseStringUTFChars(video_in, in);
 //	env->ReleaseStringUTFChars(video_out, out);
 
 	if (!cascade.load(cascadeName)) {
@@ -55,26 +59,27 @@ int main(int argc, char** argv) {
 	Mat frame;
 
 	capture >> frame;
-	while (frame.data) {
+	while (count < f_count-1) {
 
 		std::vector<Rect> cars;
 		Mat frame_gray;
 		cvtColor(frame, frame_gray, CV_BGR2GRAY);
 		equalizeHist(frame_gray, frame_gray);
 
-		cascade.detectMultiScale(frame_gray, cars, 1.2, 4, 0, Size(20, 20));
+		cascade.detectMultiScale(frame_gray, cars, 1.05, 4, 0, Size(10, 10));
 
-		for (size_t i = 0; i < cars.size(); i++) {
-			Point pt1 = cars[i].tl();
-			Size sz = cars[i].size();
-			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
-			rectangle(frame, pt1, pt2, Scalar(255));
-
-		}
-		v_o.write(frame);
+//		for (size_t i = 0; i < cars.size(); i++) {
+//			Point pt1 = cars[i].tl();
+//			Size sz = cars[i].size();
+//			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
+//			rectangle(frame, pt1, pt2, Scalar(255));
+//
+//		}
+//		v_o.write(frame);
 		//imshow("cars", frame);
 		//if(waitKey(2)==27) break;
 		capture >> frame;
+		count = count + 1;
 	}
 	capture.release();
 	//v_o.release();

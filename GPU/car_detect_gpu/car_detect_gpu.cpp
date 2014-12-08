@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
 		return 0; /* OutOfMemoryError already thrown */
 	}
 	std::cout << "video_in:" << in << "video_out:" << out << std::endl;
-	string cascadeName = "/home/ideal/hadoop-1.2.1-cpu-gpu/classifier/cars3.xml";
+	string cascadeName = "/home/ideal/cars3.xml";
 
 	VideoCapture capture(in);
 
@@ -38,16 +38,18 @@ int main(int argc, char** argv) {
 	}
 
 	double fps = capture.get(CV_CAP_PROP_FPS); //get the width of frames of the video
-	double dWidth = capture.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-	double dHeight = capture.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-
+	int dWidth = capture.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+	int dHeight = capture.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+	int f_count = capture.get(CV_CAP_PROP_FRAME_COUNT); //get the height of frames of the video
 	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
 	cout << "FPS = " << fps << endl;
+	cout << "Frame count = " << f_count << endl;
+    int count = 0;
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//
+//	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
-
-	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
-//	env->ReleaseStringUTFChars(video_in, in);
+	//	env->ReleaseStringUTFChars(video_in, in);
 //	env->ReleaseStringUTFChars(video_out, out);
 
 	CascadeClassifier_GPU cascade_gpu;
@@ -63,7 +65,7 @@ int main(int argc, char** argv) {
 	Mat frame;
 
 	capture >> frame;
-	while (frame.data) {
+	while (count < f_count-1) {
 
 		GpuMat cars;
 		Mat frame_gray;
@@ -71,8 +73,8 @@ int main(int argc, char** argv) {
 		GpuMat gray_gpu(frame_gray);
 		equalizeHist(frame_gray, frame_gray);
 
-		int detect_num = cascade_gpu.detectMultiScale(gray_gpu, cars, 1.2, 4,
-				Size(20, 20));
+		int detect_num = cascade_gpu.detectMultiScale(gray_gpu, cars, 1.1, 2,
+				Size(10, 10));
 		Mat obj_host;
 		cars.colRange(0, detect_num).download(obj_host);
 
@@ -86,8 +88,9 @@ int main(int argc, char** argv) {
 		}
 //      imshow("cars", frame);
 		//    if(waitKey(2)==27) break;
-		v_o.write(frame);
+//		v_o.write(frame);
 		capture >> frame;
+		count = count + 1;
 	}
 
 	capture.release();
