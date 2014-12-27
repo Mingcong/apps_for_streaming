@@ -18,17 +18,20 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "video_in:" << in << "  video_out:" << out << std::endl;
 
-	VideoCapture capture(in);
+	VideoCapture capture1(in);
+	VideoCapture capture2(in);
+	VideoCapture capture3(in);
+	VideoCapture capture4(in);
 
-	if (!capture.isOpened()) {
+	if (!capture1.isOpened()) {
 		cout << "can not open video" << endl;
 		return 0;
 	}
 
-	double fps = capture.get(CV_CAP_PROP_FPS); //get the width of frames of the video
-	int dWidth = capture.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-	int dHeight = capture.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-	int f_count = capture.get(CV_CAP_PROP_FRAME_COUNT); //get the height of frames of the video
+	double fps = capture1.get(CV_CAP_PROP_FPS); //get the width of frames of the video
+	int dWidth = capture1.get(CV_CAP_PROP_FRAME_WIDTH)*2; //get the width of frames of the video
+	int dHeight = capture1.get(CV_CAP_PROP_FRAME_HEIGHT)*2; //get the height of frames of the video
+	int f_count = capture1.get(CV_CAP_PROP_FRAME_COUNT); //get the height of frames of the video
 	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
@@ -41,9 +44,16 @@ int main(int argc, char** argv) {
 	GpuMat gpu_image;
 	GpuMat diff;
 
-	Mat frame;
+	Mat frame, frame1, frame2, frame_1, frame_2, frame_3, frame_4;
 
-	capture >> frame;
+	capture1 >> frame_1;
+	capture2 >> frame_2;
+	capture3 >> frame_3;
+	capture4 >> frame_4;
+
+    hconcat(frame_1,frame_2,frame1);
+    hconcat(frame_3,frame_4,frame2);
+    vconcat(frame1,frame2,frame);
 
 	GpuMat frame_gpu(frame);
 	GpuMat prevImage;
@@ -73,7 +83,14 @@ int main(int argc, char** argv) {
 //		imshow("anomaly", frame);
 //		if (waitKey(2) == 27)
 //			break;
-		capture >> frame;
+		capture1 >> frame_1;
+		capture2 >> frame_2;
+		capture3 >> frame_3;
+		capture4 >> frame_4;
+
+	    hconcat(frame_1,frame_2,frame1);
+	    hconcat(frame_3,frame_4,frame2);
+	    vconcat(frame1,frame2,frame);
 		count = count + 1;
 	}
 	t = ((double) getTickCount() - t) / getTickFrequency();

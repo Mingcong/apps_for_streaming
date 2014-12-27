@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	}
 
 	//-- Step 1: Detect the keypoints using SURF Detector
-	int minHessian = 1500;
+	int minHessian = 500;
 
 	SurfFeatureDetector detector(minHessian);
 
@@ -122,24 +122,24 @@ int main(int argc, char** argv) {
 		else
 			cout << "Not Detect!!!" << endl;
 
-		//-- Draw lines between the corners (the mapped object in the scene - image_2 )
-		line(img_matches, scene_corners[0] + Point2f(img_object.cols, 0),
-				scene_corners[1] + Point2f(img_object.cols, 0),
-				Scalar(0, 255, 0), 4);
-		line(img_matches, scene_corners[1] + Point2f(img_object.cols, 0),
-				scene_corners[2] + Point2f(img_object.cols, 0),
-				Scalar(0, 255, 0), 4);
-		line(img_matches, scene_corners[2] + Point2f(img_object.cols, 0),
-				scene_corners[3] + Point2f(img_object.cols, 0),
-				Scalar(0, 255, 0), 4);
-		line(img_matches, scene_corners[3] + Point2f(img_object.cols, 0),
-				scene_corners[0] + Point2f(img_object.cols, 0),
-				Scalar(0, 255, 0), 4);
-
-		//-- Show detected matches
-		imshow("Good Matches & Object detection", img_matches);
-
-		waitKey(500);
+//		//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+//		line(img_matches, scene_corners[0] + Point2f(img_object.cols, 0),
+//				scene_corners[1] + Point2f(img_object.cols, 0),
+//				Scalar(0, 255, 0), 4);
+//		line(img_matches, scene_corners[1] + Point2f(img_object.cols, 0),
+//				scene_corners[2] + Point2f(img_object.cols, 0),
+//				Scalar(0, 255, 0), 4);
+//		line(img_matches, scene_corners[2] + Point2f(img_object.cols, 0),
+//				scene_corners[3] + Point2f(img_object.cols, 0),
+//				Scalar(0, 255, 0), 4);
+//		line(img_matches, scene_corners[3] + Point2f(img_object.cols, 0),
+//				scene_corners[0] + Point2f(img_object.cols, 0),
+//				Scalar(0, 255, 0), 4);
+//
+//		//-- Show detected matches
+//		imshow("Good Matches & Object detection", img_matches);
+//
+//		waitKey(500);
 //		capture >> frame;
 	}
 	t = ((double) getTickCount() - t) / getTickFrequency();

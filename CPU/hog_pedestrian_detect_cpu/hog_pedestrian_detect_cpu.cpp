@@ -16,7 +16,7 @@ using namespace std;
 
 int main(int argc, char** argv) {
 	double t = (double) getTickCount();
-//    setNumThreads(4);
+    setNumThreads(4);
 	const char* in = argv[1];
 	const char* out = argv[2];
 	VideoCapture vc;
