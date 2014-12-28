@@ -22,22 +22,19 @@ using namespace cv;
 int main(int argc, char** argv) {
 
 	double t = (double) getTickCount();
-	if (argc < 5 || argc > 7) {
-		LOG(ERROR) << "./test_net net_proto pretrained_net_proto batch_size "
-				<< "[CPU/GPU] [Device ID]";
+	if (argc != 5) {
+		LOG(ERROR) << "./test_net batch_size [CPU/GPU] input output";
 		return 1;
 	}
 	Caffe::set_phase(Caffe::TEST);
-
+	const char *input = argv[3];
+	const char *output = argv[4];
 	int batch_size = 0;
-	batch_size = atoi(argv[3]);
+	batch_size = atoi(argv[1]);
 	//Setting CPU or GPU
-	if (argc >= 5 && strcmp(argv[4], "GPU") == 0) {
+	if (argc >= 5 && strcmp(argv[2], "GPU") == 0) {
 		Caffe::set_mode(Caffe::GPU);
 		int device_id = 0;
-		if (argc == 6) {
-			device_id = atoi(argv[5]);
-		}
 		Caffe::SetDevice(device_id);
 		LOG(ERROR) << "Using GPU #" << device_id;
 	} else {
@@ -46,9 +43,10 @@ int main(int argc, char** argv) {
 	}
 
 	//get the net
-	Net<float> caffe_test_net(argv[1]);
+	Net<float> caffe_test_net("/home/ideal/caffe-opencv/jni/proto.txt");
 	//get trained net
-	caffe_test_net.CopyTrainedLayersFrom(argv[2]);
+	caffe_test_net.CopyTrainedLayersFrom(
+			"/home/ideal/caffe-opencv/jni/bvlc_reference_caffenet.caffemodel");
 
 	// Run ForwardPrefilled
 	float loss;
@@ -72,9 +70,9 @@ int main(int argc, char** argv) {
 	string image_path;
 	char img_list[255];
 	char src[255];
-	sprintf(src, "tar -xf /tmp/%s.tar -C /tmp", argv[6]);
+	sprintf(src, "tar -xf /tmp/%s.tar -C /tmp", input);
 	system(src);
-	sprintf(img_list, "/tmp/%s/img_list.txt", argv[6]);
+	sprintf(img_list, "/tmp/%s/img_list.txt", input);
 
 	ifstream infile(img_list, ios::in);
 	while (getline(infile, image_name, '\n')) {
@@ -98,16 +96,27 @@ int main(int argc, char** argv) {
 	//LOG(INFO)<< "Output result size: "<< result.size();
 	// Now result will contain the argmax results.
 	const float* argmaxs = result[1]->cpu_data();
+	FILE *stream;
+	char str[255];
+	sprintf(str, "/tmp/%s", output);
+
+	stream = fopen(str, "w+");
+
+	LOG(INFO) << "Output result size: " << result.size();
 	//for (int i = 0; i < 1; ++i) {
 	for (int i = 0; i < result[1]->num(); ++i) {
 //    LOG(INFO)<< " iteration: "<< k ;
+		sprintf(str, "Image: %d    class: %.0f \n", i, argmaxs[i]);
+//		printf("%s\n", str);
+		fprintf(stream, str);
 		LOG(INFO) << " Image: " << i << " class:" << argmaxs[i];
 	}
+	fclose(stream);
 	double t5 = ((double) getTickCount() - t4) / getTickFrequency();
 	LOG(INFO) << " loop time " << t5;
 // }
 	char del[255];
-	sprintf(del, "rm -rf /tmp/%s", argv[6]);
+	sprintf(del, "rm -rf /tmp/%s", input);
 
 	printf("%s\n", del);
 	system(del);
