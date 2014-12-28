@@ -1,0 +1,3 @@
+g++ gpu.cpp `pkg-config --cflags opencv` -m64 -shared -pthread -fPIC -DUSE_MKL -I/home/ideal/tools/jdk1.7.0_71/include -I/home/ideal/tools/jdk1.7.0_71/include/linux -I/usr/local/include -I../.build_release/src -I../src -I../include -I/usr/local/cuda/include -I/opt/intel/mkl/include -c -o gpu.o
+
+g++ gpu.o ../.build_release/lib/libcaffe.a -o libgpu_app.so -m64 -shared -fPIC -L/usr/local/cuda/lib64 -L/opt/intel/mkl/lib -L/opt/intel/mkl/lib/intel64 -lcudart -lcublas -lcurand  -lglog -lgflags -lprotobuf -lleveldb -lsnappy -llmdb -lboost_system -lhdf5_hl -lhdf5 -lopencv_core -lopencv_highgui -lopencv_imgproc -lpthread -lboost_thread -lmkl_rt
