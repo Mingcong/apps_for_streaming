@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
-    int count = 0;
+//    int count = 0;
 
 	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
 	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize,
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
 	capture >> frame;
 	cvtColor(frame, image, CV_RGB2GRAY);
-	while (count < f_count-1) {
+	while (!frame.empty()) {
 		grabbedImage = frame.clone();
 		cv::GaussianBlur(grabbedImage, grabbedImage, Size(9, 9), 2, 2);
 		prevImage = image.clone();
@@ -65,11 +65,12 @@ int main(int argc, char** argv) {
 			// rectangle(frame, Point(10, 10),
 			//          	   Point(0 + dWidth-10, 0 + dHeight-10),
 			//          	   Scalar(0,255,255), 1, CV_AA, 0);
-//			v_o.write(frame);
+			v_o.write(frame);
 		}
 		capture >> frame;
-		count = count + 1;
 	}
+	capture.release();
+	v_o.~VideoWriter();
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
 	return 1;
