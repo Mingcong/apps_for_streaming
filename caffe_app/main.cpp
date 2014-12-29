@@ -1,5 +1,3 @@
-#include "call_app.h"
-
 #include <cuda_runtime.h>
 
 #include <cstring>
@@ -21,23 +19,20 @@ using namespace caffe;
 using namespace std;
 using namespace cv;
 
-//int main(int argc, char** argv) {
-JNIEXPORT jint JNICALL Java_call_1app_app
-  (JNIEnv *env, jclass, jint size, jstring mode, jstring in, jstring out) {
-
+int main(int argc, char** argv) {
 
 	double t = (double) getTickCount();
+	if (argc != 5) {
+		LOG(ERROR) << "./test_net batch_size [CPU/GPU] input output";
+		return 1;
+	}
 	Caffe::set_phase(Caffe::TEST);
-	const int batch_size=size;
-	const char *gpu;
-	const char *input;
-	const char *output;
-
-	gpu = env->GetStringUTFChars(mode, 0);
-	input = env->GetStringUTFChars(in, 0);
-	output = env->GetStringUTFChars(out, 0);
+	const char *input = argv[3];
+	const char *output = argv[4];
+	int batch_size = 0;
+	batch_size = atoi(argv[1]);
 	//Setting CPU or GPU
-	if (strcmp(gpu, "GPU") == 0) {
+	if (argc >= 5 && strcmp(argv[2], "GPU") == 0) {
 		Caffe::set_mode(Caffe::GPU);
 		int device_id = 0;
 		Caffe::SetDevice(device_id);
