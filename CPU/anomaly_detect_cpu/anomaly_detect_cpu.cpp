@@ -1,13 +1,15 @@
 #include <iostream>
+#include <fstream>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <stdio.h>
 using namespace std;
 using namespace cv;
 
 int main(int argc, char** argv) {
 	double t = (double) getTickCount();
+
+	cv::setNumThreads(atoi(argv[3]));
 
 	const char* in = argv[1];
 	const char* out = argv[2];
@@ -32,11 +34,16 @@ int main(int argc, char** argv) {
 	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
-//    int count = 0;
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
-	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize,
-			true); //initialize the VideoWriter objec
+	int count = 0;
+	char str[255];
+    FILE *stream;
+    stream = fopen(out, "w+");
+
+
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize,
+//			true); //initialize the VideoWriter objec
 
 	Mat image;
 	Mat prevImage;
@@ -61,16 +68,25 @@ int main(int argc, char** argv) {
 //		double x = sca.val[0]; //+sca.val[1]+sca.val[2];
 		int x = countNonZero(diff);
 		//cout << "x = " << x<< endl;
-		if (x > 0) {
-			// rectangle(frame, Point(10, 10),
-			//          	   Point(0 + dWidth-10, 0 + dHeight-10),
-			//          	   Scalar(0,255,255), 1, CV_AA, 0);
-			v_o.write(frame);
+//		if (x > 0) {
+//			// rectangle(frame, Point(10, 10),
+//			//          	   Point(0 + dWidth-10, 0 + dHeight-10),
+//			//          	   Scalar(0,255,255), 1, CV_AA, 0);
+//			v_o.write(frame);
+//		}
+
+		count = count + 1;
+		if(x > 0) {
+//			cout << "frame: " << count << " cars = " << cars.size() << endl;
+			sprintf(str, "frame: %d   alarm!!! \n", count);
+			fprintf(stream, str);
 		}
+
 		capture >> frame;
 	}
 	capture.release();
-	v_o.~VideoWriter();
+	fclose(stream);
+//	v_o.~VideoWriter();
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
 	return 1;

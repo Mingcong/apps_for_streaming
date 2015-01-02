@@ -16,7 +16,9 @@ using namespace std;
 
 int main(int argc, char** argv) {
 	double t = (double) getTickCount();
-	setNumThreads(4);
+
+	cv::setNumThreads(atoi(argv[3]));
+
 	const char* in = argv[1];
 	const char* out = argv[2];
 	VideoCapture vc;
@@ -42,9 +44,14 @@ int main(int argc, char** argv) {
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
-	VideoWriter video_writer(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize,
-			true);
+	int count = 0;
+	char str[255];
+    FILE *stream;
+    stream = fopen(out, "w+");
+
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//	VideoWriter video_writer(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize,
+//			true);
 
 	Mat img_gray;
 
@@ -61,19 +68,28 @@ int main(int argc, char** argv) {
 				1.05, 2);
 
 		// Draw positive classified windows
-		for (size_t i = 0; i < found.size(); i++) {
-			Rect r = found[i];
-			rectangle(frame, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
-		}
+//		for (size_t i = 0; i < found.size(); i++) {
+//			Rect r = found[i];
+//			rectangle(frame, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+//		}
 //		   imshow("opencv_gpu_hog", frame);
 //		  waitKey(3);
 //
-		video_writer << frame;
+
+		count = count + 1;
+		if(found.size() > 0) {
+//			cout << "frame: " << count << " pedestrian = " << found.size() << endl;
+			sprintf(str, "frame: %d   pedestrian: %d\n", count, found.size());
+			fprintf(stream, str);
+		}
+
+//		video_writer << frame;
 		vc >> frame;
 	}
 
 	vc.release();
-	video_writer.~VideoWriter();
+	fclose(stream);
+//	video_writer.~VideoWriter();
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
 	return 1;

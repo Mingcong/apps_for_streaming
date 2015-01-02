@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -8,7 +9,8 @@ using namespace cv;
 
 int main(int argc, char** argv) {
 	double t = (double) getTickCount();
-	cv::setNumThreads(4);
+
+	cv::setNumThreads(atoi(argv[3]));
 
 	const char* in = argv[1];
 	const char* out = argv[2];
@@ -35,8 +37,13 @@ int main(int argc, char** argv) {
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
-	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
+	int count = 0;
+	char str[255];
+    FILE *stream;
+    stream = fopen(out, "w+");
+
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
 
 	if (!cascade.load(cascadeName)) {
 		cout << "can not find cascadeName" << endl;
@@ -55,21 +62,31 @@ int main(int argc, char** argv) {
 
 		cascade.detectMultiScale(frame_gray, cars, 1.05, 4, 0, Size(10, 10));
 
-		for (size_t i = 0; i < cars.size(); i++) {
-			Point pt1 = cars[i].tl();
-			Size sz = cars[i].size();
-			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
-			rectangle(frame, pt1, pt2, Scalar(255));
+//		for (size_t i = 0; i < cars.size(); i++) {
+//			Point pt1 = cars[i].tl();
+//			Size sz = cars[i].size();
+//			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
+//			rectangle(frame, pt1, pt2, Scalar(255));
+//
+//		}
 
+//		v_o.write(frame);
+
+		count = count + 1;
+		if(cars.size() > 0) {
+//			cout << "frame: " << count << " cars = " << cars.size() << endl;
+			sprintf(str, "frame: %d   cars: %d\n", count, cars.size());
+			fprintf(stream, str);
 		}
-		v_o.write(frame);
+
 //		imshow("cars", frame);
 //		if(waitKey(2)==27) break;
 		capture >> frame;
 
 	}
 	capture.release();
-	v_o.~VideoWriter();
+	fclose(stream);
+//	v_o.~VideoWriter();
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
 	return 1;

@@ -20,7 +20,8 @@ bool isSmallAngle(const std::vector<Point2f> scene_corners);
 /** @function main */
 int main(int argc, char** argv) {
 	double t = (double) getTickCount();
-	if (argc != 3) {
+	cv::setNumThreads(atoi(argv[4]));
+	if (argc != 5) {
 		readme();
 		return -1;
 	}
@@ -31,6 +32,8 @@ int main(int argc, char** argv) {
 		std::cout << " --(!) Error reading images " << std::endl;
 		return -1;
 	}
+	const char *input = argv[2];
+	const char *output = argv[3];
 
 	//-- Step 1: Detect the keypoints using SURF Detector
 	int minHessian = 500;
@@ -58,13 +61,26 @@ int main(int argc, char** argv) {
 //	capture >> frame;
 //	while (frame.data) {
 //		cvtColor(frame, img_scene, CV_RGB2GRAY);
-	int detect_count = 0;
+//	int detect_count = 0;
+	char img_list[255];
+	char str[255];
+	char src[255];
+
+	sprintf(src, "tar -xf /tmp/%s.tar -C /tmp", input);
+	system(src);
+	sprintf(img_list, "/tmp/%s/img_list.txt", input);
 
 	string image_name;
-	ifstream infile(argv[2], ios::in);
+	string image_path;
+
+	FILE *stream;
+	sprintf(str, "/tmp/%s", output);
+	stream = fopen(str, "w+");
+
+	ifstream infile(img_list, ios::in);
 	while (getline(infile, image_name, '\n')) {
-		cout << line << endl;
-		Mat img_scene = imread(image_name, CV_LOAD_IMAGE_GRAYSCALE);
+		image_path = "/tmp/" + image_name;
+		Mat img_scene = imread(image_path, CV_LOAD_IMAGE_GRAYSCALE);
 		//imshow("11",img_scene);
 
 //	    Mat img_scene = imread(argv[2] , CV_LOAD_IMAGE_GRAYSCALE );
@@ -114,13 +130,13 @@ int main(int argc, char** argv) {
 		perspectiveTransform(obj_corners, scene_corners, H);
 		bool falseDetect = isSmallAngle(scene_corners);
 		if (!falseDetect) {
-			cout
-					<< "Detect!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-					<< endl;
-			detect_count++;
+			cout << "find image: " << image_name << endl;
+			sprintf(str, "Find Image: %s\n", image_name.c_str());
+			//		printf("%s\n", str);
+			fprintf(stream, str);
+
 		}
-		else
-			cout << "Not Detect!!!" << endl;
+//		detect_count++;
 
 //		//-- Draw lines between the corners (the mapped object in the scene - image_2 )
 //		line(img_matches, scene_corners[0] + Point2f(img_object.cols, 0),
@@ -142,9 +158,15 @@ int main(int argc, char** argv) {
 //		waitKey(500);
 //		capture >> frame;
 	}
+	fclose(stream);
+	char del[255];
+	sprintf(del, "rm -rf /tmp/%s", input);
+
+	printf("%s\n", del);
+	system(del);
+
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
-	cout << "detect_count: " << detect_count << endl;
 	return 0;
 }
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -32,11 +33,15 @@ int main(int argc, char** argv) {
 	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
-    int count = 0;
+
+	int count = 0;
+	char str[255];
+    FILE *stream;
+    stream = fopen(out, "w+");
 
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
-	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
 
 	GpuMat gpu_image;
 	GpuMat diff;
@@ -48,7 +53,7 @@ int main(int argc, char** argv) {
 	GpuMat frame_gpu(frame);
 	GpuMat prevImage;
 	gpu::cvtColor(frame_gpu, gpu_image, CV_RGB2GRAY);
-	while (count < f_count-1) {
+	while (!frame.empty()) {
 		frame_gpu.upload(frame);
 		gpu::GaussianBlur(frame_gpu, frame_gpu, Size(9, 9), 2, 2);
 		prevImage = gpu_image.clone();
@@ -64,18 +69,27 @@ int main(int argc, char** argv) {
 //		double x = sca.val[0]; // + sca.val[1] + sca.val[2];
 		int x = countNonZero(cpu_diff);
 //		cout << "x = " << x<< endl;
-		if (x > 0) {
+//		if (x > 0) {
 //			rectangle(frame, Point(10, 10),
 //					Point(0 + dWidth - 10, 0 + dHeight - 10),
 //					Scalar(0, 255, 255), 1, CV_AA, 0);
-//			v_o.write(frame);
-		}
+////			v_o.write(frame);
+//		}
 //		imshow("anomaly", frame);
 //		if (waitKey(2) == 27)
 //			break;
-		capture >> frame;
+
 		count = count + 1;
+		if(x > 0) {
+//			cout << "frame: " << count << " cars = " << cars.size() << endl;
+			sprintf(str, "frame: %d   alarm!!! \n", count);
+			fprintf(stream, str);
+		}
+
+		capture >> frame;
 	}
+	capture.release();
+	fclose(stream);
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
 	return 1;

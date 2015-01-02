@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
@@ -38,8 +39,13 @@ int main(int argc, char** argv) {
 	cout << "FPS = " << fps << endl;
 	cout << "Frame count = " << f_count << endl;
 
-	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
-	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
+	int count = 0;
+	char str[255];
+    FILE *stream;
+    stream = fopen(out, "w+");
+
+//	Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+//	VideoWriter v_o(out, CV_FOURCC('D', 'I', 'V', 'X'), fps, frameSize, true); //initialize the VideoWriter objec
 
 	CascadeClassifier_GPU cascade_gpu;
 	int gpuCnt = getCudaEnabledDeviceCount(); // gpuCnt >0 if CUDA device detected
@@ -63,26 +69,34 @@ int main(int argc, char** argv) {
 
 		int detect_num = cascade_gpu.detectMultiScale(gray_gpu, cars, 1.1, 2,
 				Size(10, 10));
-		Mat obj_host;
-		cars.colRange(0, detect_num).download(obj_host);
-
-		Rect* ccars = obj_host.ptr<Rect>();
-
-		for (int i = 0; i < detect_num; ++i) {
-			Point pt1 = ccars[i].tl();
-			Size sz = ccars[i].size();
-			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
-			rectangle(frame, pt1, pt2, Scalar(255));
-		}
+//		Mat obj_host;
+//		cars.colRange(0, detect_num).download(obj_host);
+//
+//		Rect* ccars = obj_host.ptr<Rect>();
+//		for (int i = 0; i < detect_num; ++i) {
+//			Point pt1 = ccars[i].tl();
+//			Size sz = ccars[i].size();
+//			Point pt2(pt1.x + sz.width, pt1.y + sz.height);
+//			rectangle(frame, pt1, pt2, Scalar(255));
+//		}
 //		imshow("cars", frame);
 //		if (waitKey(2) == 27)
 //			break;
-		v_o.write(frame);
+//		v_o.write(frame);
+		count = count + 1;
+
+		if(detect_num > 0) {
+//			cout << "frame: " << count << " cars = " << detect_num << endl;
+			sprintf(str, "frame: %d   cars: %d\n", count, detect_num);
+			fprintf(stream, str);
+		}
+
 		capture >> frame;
 	}
 
 	capture.release();
-	v_o.~VideoWriter();
+	fclose(stream);
+//	v_o.~VideoWriter();
 	cascade_gpu.release();
 	t = ((double) getTickCount() - t) / getTickFrequency();
 	cout << "processing time: " << t << endl;
